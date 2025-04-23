@@ -1,2 +1,18 @@
 .DS_Store
 .DS_Store/
+
+# LaTeX build/auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.dvi
+*.bbl
+*.bcf
+*.blg
+*.run.xml
