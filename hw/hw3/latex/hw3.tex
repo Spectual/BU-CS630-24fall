@@ -1,0 +1,237 @@
+\documentclass[11pt]{exam}
+\title{\Large{\textbf{CS 630, Fall 2024, Homework 3}}}
+\author{\textbf{Yifei Bao}}
+\date{\textbf{September 29, 2024}}
+
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{amsmath,amsfonts,latexsym,amssymb}
+\usepackage{enumerate}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{etoolbox}
+\usepackage{tipa}
+\usepackage{caption}
+\usepackage[boxruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{enumitem}
+
+\pdfpagewidth 8.5in
+\pdfpageheight 11in 
+
+\oddsidemargin 0in
+\evensidemargin 0in
+
+\newtheorem{problem}{Problem}
+
+\let\oldtcc\tcc
+\renewcommand{\tcc}[1]{{\color{olive}\oldtcc{#1}}}
+
+\begin{document}
+\maketitle
+
+% Problem 1
+\begin{problem}
+    \textbf{Polling} 
+\end{problem} 
+
+% Algorithm Description
+\noindent\textit{Algorithm.}
+This problem can be converted to the Independent Set problem. 
+Construct a conflict graph G with each group as nodes. 
+If two groups share at least one member, 
+then create an edge between the corresponding two nodes. 
+Selecting groups not sharing numbers means that selected nodes in the graph share no edges.
+\\
+\indent It is a greedy algorithm based on selecting nodes (groups) with the minimum degree in the conflict graph. 
+This algorithm initiates an empty set S for storing selected group nodes. 
+Then iteratively choose node v with minimum degree, add corresponding group v.g to S and remove v and all its adjacent nodes from the graph until there are no nodes left in the graph.
+\\
+\\
+% Algorithm 1
+\begin{algorithm}[H]
+    \caption{SelectGroups$([g_1,g_2,...,g_n])$}
+    \tcc{Input: A list of groups $[g_1,g_2,...,g_n]$\\
+    Output: A list of selected groups $S$}
+    $G \gets$ CreateConflictGraph($[g_1,g_2,...,g_n]$)\tcc{Construct a conflict graph with each group as nodes. If two groups share members, create an edge between corresponding nodes}
+    $S \gets [\ ]$ \tcc{Empty set of group nodes}
+
+    \While{$G$ is not empty}{
+        $v \gets$ SelectMinDegreeNode($G$)\tcc{Select a node with minimum degree}
+        $S.append(v.g)$\tcc{Add the corresponding group to $S$}
+        $G \gets$ RemoveNodeAndNeighbors($G,v$)\tcc{Remove the node and its neighbors}
+    }
+    \Return $S$
+\end{algorithm}
+\vspace{2em}
+
+% Running time and space complexity
+\noindent\textit{Running time and space complexity.}
+Let $n$ be the number of groups. Let $m$ be the number of members.
+Let $k$ be the maximum number of groups a member belongs to.
+Constructing $n$ nodes in the graph costs $O(n)$.\\
+\indent Constructing all edges between $k$ nodes for each member cost $O(k^2)$ and total is $O(mk^2)$.
+Removing nodes and neighbors costs $O(E) \leq O(mk^2)$. Hence the total running time is $O(n+mk^2)$.
+\\
+\indent For storing nodes and edges, the space complexity is $O(n+E) \leq O(n+mk^2)$.
+\\
+\\
+% Correctness
+\noindent\textit{Correctness.}
+The conflict graph ensures that only between group nodes sharing members can an edge be added.
+When a node $v$ is selected in the graph, all adjacent nodes and the node are removed.
+Thus no groups left could share member with group corresponding to node $v$.
+Therefore, no two groups in $S$ could share members. $S$ is a valid solution for the problem.
+\\
+\\
+% Approximation Ratio
+\noindent\textit{Approximation Ratio.}
+Let $D$ be the maximum degree in $G$. The goal is to find a lower bound on $|S|$. 
+Each $v$ in $S$ has at most $D$ neighbors, so $|V-S| \leq D \cdot |S|$. Thus $|V|= |V-S|+|S| \leq D \cdot |S|+|S|= (D+1)|S|$.
+In conclusion, $|OPT| \leq |V| \leq (D+1) |S|$. The greedy algorithm is a $(D+1)$-approximation.
+
+% Problem 2
+\begin{problem}
+    \textbf{Catering}
+\end{problem}
+
+\noindent\textbf{2.1}\\
+% Algorithm Description
+\noindent\textit{Algorithm.}
+This problem can be converted to the Set Cover problem.
+For each pair of entree and drink, we find guests(set) that can be satisfied(covered) by the pair.
+Then we select the pair that can cover the most guests, and remove the covered guests from the set of uncovered guests.
+Repeat this process until all guests are covered and return the selected pairs.
+
+
+
+% Algorithm 2
+\begin{algorithm}[H]
+\caption{PickPairs$(P, G)$}
+    \tcc{P is a list of pairs $(e,d)$\\ 
+    G is a list of guests, each g has list of entrees $g.E$ and drinks $g.D$}
+    $X \gets G$\tcc{Uncoverd guests in G}
+    $S \gets [\ ]$\tcc{Empty set of selected pairs}
+    \While{$X$ is not empty}{
+        $p_{best} \gets (\ )$\tcc{Empty tuple for best pair}
+        $c_{max} \gets 0$\tcc{Maximum count of guests satisfied}
+        \For{$(e,d)$ in $P$}{
+            $G_{satisfied} \gets \{g \in U | e \in g.E \text{ and } d \in g.D\}$\tcc{All guests that can be satisfied by pair $(e,d)$}
+            \If{$|G_{satisfied}| > c_{max}$}{
+                $p_{best} \gets (e,d)$\tcc{Select p that covers the most guests}
+                $c_{max} \gets |G_{satisfied}|$\tcc{Update maximum count}
+            }
+        }
+        $S.append(p_{best})$\;
+        $X \gets X - G_{satisfied}$\;
+    }
+    \Return $S$
+\end{algorithm}
+
+\vspace{2em}
+
+% Space complexity
+\noindent\textit{Space complexity.}
+Let $m$ be the number of all unique entrees and $n$ be the number of all unique drinks.
+Let $k$ be the number of guests.
+For storing guests, the space complexity is $O(k(m+n))$ in the worst case.
+For storing pairs, the space complexity is $O(mn)$ in the worst case.
+In conclusion, the space complexity is $O(km+kn+mn)$.\\
+
+
+% Corrrectness
+\noindent\textit{Correctness.}
+In this greedy algorithm, we select the pair (e,d) that can cover the most guests in each iteration.
+In each iteration, the chosen pair (e,d) is valid since it comes from $P$.
+Each time the guests covered by (e,d) are removed from the set of uncovered guests till all guests are covered.
+Thus, all guests are satisfied by the selected pairs from given list. The algorithm yields a valid solution. 
+\\
+\newpage
+% Approximation Ratio
+\noindent\textit{Approximation Ratio.}
+The algorithm is a SC greedy approximation which is correlated with the algorithm in class.
+Suppose the optimal solution to SC uses $k$ pairs, and there are total $n$ guests. 
+In this problem, pairs correspond to sets, and guests correspond to items.
+Since the optimal solution uses $k$ sets, there is at least one set in the optimal solution that covers $\frac{1}{k}$
+fraction of all items. The GreedySC algorithm selects the largest set, so it also covers at least $\frac{n}{k}$ items.
+After the first iteration, at most $n\left(1-\frac{1}{k}\right)$ items remain uncovered.
+After $k\ln n$ rounds, there are at most $n\left(1-\frac{1}{k}\right)^{k\ln n}$ uncovered items left.
+We know that:
+$$n\left(1-\frac{1}{k}\right)^{k\ln n} < n\cdot \left(\frac{1}{e}\right)^{\ln n} = 1$$
+Thus, there are at most $k\ln n$ sets returned by the greedy algorithm.
+The greedy algorithm is a $\ln n$-approximation.\\
+
+\noindent\textbf{2.2}\\
+% Algorithm Description
+\noindent\textit{Algorithm.}
+Unlike the first problem, where guests must be satisfied by both the entree and drink in a specific pair, 
+in this problem guests can mix and match. 
+For each pair, we find guests whose entree or drink preferences can be satisfied by that pair, 
+even if they prefer to mix the entree from one pair with the drink from another. 
+Then select the pair that satisfies the most guests, updating their entree or drink preferences as covered. 
+Repeat the process until all guests have both their entree and drink preferences satisfied, and returns the selected pairs.
+\\
+\\
+% Space complexity
+\noindent\textit{Space complexity.}
+The space complexity is also $O(km+kn+mn)$.\\
+
+% Correctness
+\noindent\textit{Correctness.}
+In this greedy algorithm, we select the pair $(e,d)$ that can satisfy the most uncovered guests in each iteration.
+Unlike the first problem, guests can mix and match, so the algorithm tracks entree and drink preferences separately.
+In each iteration, the chosen pair $(e,d)$ is valid since it comes from $P$. Each time, the algorithm updates the satisfaction status of guests for both entree and drink independently.
+Guests are removed from the set of uncovered guests only when both their entree and drink preferences are satisfied.
+Repeat this process until all guests have both preferences satisfied.
+Thus, all guests are eventually satisfied by the selected pairs from the given list. The algorithm yields a valid solution.
+\\
+\\
+% Approximation Ratio
+\noindent\textit{Approximation Ratio.}
+This algorithm is a variant of the SC greedy approximation algorithm, adapted to allow mixing of entrees and drinks.
+Let the optimal solution use $k$ pairs to satisfy all guests, and suppose there are $n$ guests in total.
+In this problem, each pair corresponds to a set, and guests correspond to items, similar to the standard Set Cover problem.
+In each iteration, the algorithm selects the pair that satisfies the largest number of remaining guests’ entree or drink preferences.
+Since the optimal solution uses $k$ sets (pairs), there is at least one pair in the optimal solution that covers at least $\frac{1}{k}$ fraction of all remaining uncovered preferences (entree or drink).
+The greedy algorithm always selects the pair that covers the most uncovered preferences, so it covers at least as many preferences as the best pair in the optimal solution.
+After the first iteration, at most $n\left(1-\frac{1}{k}\right)$ preferences remain uncovered.
+After $k\ln n$ rounds, at most $n\left(1-\frac{1}{k}\right)^{k\ln n}$ uncovered preferences remain.
+We know that:
+$$n\left(1-\frac{1}{k}\right)^{k\ln n} < n \cdot \left(\frac{1}{e}\right)^{\ln n} = 1$$
+Thus, the algorithm returns at most $k\ln n$ pairs, similar to the standard Set Cover problem.
+Therefore, the greedy algorithm is a $\ln n$-approximation.\
+
+\begin{algorithm}[H]
+    \caption{PickMixablePairs$(P, G)$}
+        \tcc{P is a list of pairs $(e,d)$\\ 
+        G is a list of guests, each g has list of entrees $g.E$ and drinks $g.D$}
+        $X \gets G$\tcc{Uncovered guests in G}
+        $S \gets [\ ]$\tcc{Empty set of selected pairs}
+        $E_{satisfied} \gets \{g: \text{False} \text{ for } g \in G\}$\tcc{Store if a guest's E is satisfied}
+        $D_{satisfied} \gets \{g: \text{False} \text{ for } g \in G\}$\tcc{Store if a guest's D is satisfied}
+        \While{$X$ is not empty}{
+            $p_{best} \gets (\ )$\tcc{Empty tuple for best pair}
+            $c_{max} \gets 0$\tcc{Maximum count of guests satisfied}
+            \For{$(e,d)$ in $P$}{
+                $G_{e\_satisfied} \gets \{g \in X \mid e \in g.E \text{ and not } E_{satisfied}[g]\}$\tcc{Guests whose entree preference is satisfied by e but not yet covered}
+                $G_{d\_satisfied} \gets \{g \in X \mid d \in g.D \text{ and not } D_{satisfied}[g]\}$\tcc{Guests whose drink preference is satisfied by d but not yet covered}
+                $G_{satisfied} \gets G_{e\_satisfied} \cup G_{d\_satisfied}$\tcc{Guests satisfied by either e or d}
+                \If{$|G_{satisfied}| > c_{max}$}{
+                    $p_{best} \gets (e,d)$\tcc{Select the pair that satisfies the most guests}
+                    $c_{max} \gets |G_{satisfied}|$\tcc{Update maximum count}
+                }
+            }
+            $S.append(p_{best})$\;
+            \For{$g$ in $G_{e\_satisfied}$}{
+                $E_{satisfied}[g] \gets \text{True}$\tcc{The guest's entree preference is now satisfied}
+            }
+            \For{$g$ in $G_{d\_satisfied}$}{
+                $D_{satisfied}[g] \gets \text{True}$\tcc{The guest's drink preference is now satisfied}
+            }
+            $X \gets \{g \in X \mid not (E_{satisfied}[g] \text{ and } D_{satisfied}[g])\}$\tcc{Remove guests whose both entree and drink preferences are satisfied}
+        }
+        \Return $S$
+\end{algorithm}
+
+
+\end{document}

@@ -1,0 +1,131 @@
+\documentclass[11pt]{exam}
+\title{\Large{\textbf{CS 630, Fall 2024, Homework 7}}}
+\author{\textbf{Yifei Bao}}
+\date{\textbf{November 18, 2024}}
+
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{amsmath,amsfonts,latexsym,amssymb}
+\usepackage{enumerate}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{etoolbox}
+\usepackage{tipa}
+\usepackage{caption}
+\usepackage[boxruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{enumitem}
+
+\pdfpagewidth 8.5in
+\pdfpageheight 11in 
+
+\oddsidemargin 0in
+\evensidemargin 0in
+
+\newtheorem{problem}{Problem}
+
+\let\oldtcc\tcc
+\renewcommand{\tcc}[1]{{\color{olive}\oldtcc{#1}}}
+
+\begin{document}
+\maketitle
+
+% Problem 1
+\begin{problem}
+    \textbf{Multi-path routing} 
+\end{problem} 
+
+\noindent\textbf{1.}
+Since each edge succeeds independently with probability p, the total success probability is:
+
+$P(p) = p \cdot p \cdot p = p^3$
+
+When $p = 0.5$: $P(0.5) = (0.5)^3 = 0.125$
+
+\noindent\textbf{2.}
+There are 4 non-overlapping paths from $s$ to $t$, and the paths are independent.
+
+The probability of one path failing is $1 - p^3$.
+The probability of all 4 paths failing is $(1 - p^3)^4$.
+
+The probability of at least one path succeeding is:
+
+$P(p) = 1 - (1 - p^3)^4$
+
+When $p = 0.5$: $P(0.5) = 1 - (1 - 0.5^3)^4 = 1 - 0.875^4 = 0.41$
+
+\noindent\textbf{3.}
+There are 4 overlapping paths from $s$ to $t$:
+
+$s \to v11 \to v12 \to t$
+
+$s \to v11 \to v22 \to t$   
+
+$s \to v21 \to v12 \to t$
+
+$s \to v21 \to v22 \to t$
+
+$P(s \to ... \to v12) = 1 - (1-p^2)^2$
+
+$P(s \to ... \to v22) = 1 - (1-p^2)^2$
+
+$P(s \to ... \to t) = 1 - (1 - p(1 - (1-p^2)^2))^2$
+
+When $p = 0.5$: $P(0.5) = 0.39$
+
+
+% Problem 2
+\begin{problem}
+    \textbf{MAX Sketches}
+\end{problem}
+
+\noindent\textbf{1.}
+Each sketch stores the maximum hash value of its inserted elements. The maximum hash value from the union of sets  A  and  B  is the maximum of the maximum hash values from each set.
+
+Therefore, $S_{A \cup B} = \max(S_A, S_B)$
+
+\noindent\textbf{2.}
+There are $2^{32}$ possible hash values. Exactly half of the hash values are  $\geq 2^{31}$.
+
+Therefore, $P(S \geq 2^{31}) = \frac{2^{31}}{2^{32}} = \frac{1}{2}$
+
+\noindent\textbf{3.}
+$2^{32} - 2^{32 - i} = 2^{32} \left( 1 - \frac{1}{2^i} \right)$
+
+Number of Hashes Above Threshold:  $2^{32 - i}$.
+
+$P\left( S \geq 2^{32} - 2^{32 - i} \right) = \frac{2^{32 - i}}{2^{32}} = \frac{1}{2^i}$
+
+\noindent\textbf{4.}
+When inserting $n = 2^k$ items with uniformly random hash values between  0  and  $2^{32} - 1$ , the maximum value $S$ has the CDF:
+
+$P(S \leq s) = \left( \frac{s + 1}{2^{32}} \right)^{n}$
+
+To finding the Lower Bound, We seek $s_0$  such that:
+
+$P(S \geq s_0) = 1 - P(S \leq s_0 - 1) \geq \frac{1}{2}$
+
+$\left( \frac{s_0}{2^{32}} \right)^{n} \leq \frac{1}{2}$
+
+$n \ln\left( \frac{s_0}{2^{32}} \right) \leq -\ln 2$
+
+$\ln\left( \frac{s_0}{2^{32}} \right) \leq -\frac{\ln 2}{n}$
+
+
+$s_0 \geq 2^{32} e^{- \frac{\ln 2}{n}} = 2^{32} \left( e^{- \frac{\ln 2}{2^k}} \right)$
+
+And  $e^{-x} \approx 1 - x$,
+
+$s_0 \geq 2^{32} \left( 1 - \frac{\ln 2}{2^k} \right)$
+
+Therefore, the lower bound is:
+$S \geq 2^{32} - \frac{\ln 2 \times 2^{32}}{2^k}$
+
+
+
+
+
+
+
+
+\end{document}

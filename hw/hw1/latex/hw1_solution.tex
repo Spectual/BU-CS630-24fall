@@ -1,0 +1,207 @@
+\documentclass[11pt]{exam}
+\title{\Large{\textbf{CS 630, Fall 2024, Homework 1}}}
+\author{\textbf{Yifei Bao}}
+\date{\textbf{September 15, 2024}}
+
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{amsmath,amsfonts,latexsym,amssymb}
+\usepackage{enumerate}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{etoolbox}
+\usepackage{tipa}
+\usepackage{caption}
+\usepackage[boxruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{enumitem}
+
+\pdfpagewidth 8.5in
+\pdfpageheight 11in 
+
+\oddsidemargin 0in
+\evensidemargin 0in
+
+\newtheorem{problem}{Problem}
+
+\let\oldtcc\tcc
+\renewcommand{\tcc}[1]{{\color{olive}\oldtcc{#1}}}
+
+\begin{document}
+\maketitle
+
+% Problem 1
+\begin{problem}
+      \textbf{Database restore} 
+\end{problem} 
+
+% Algorithm 1
+\begin{algorithm}[H]
+\caption{databaseRestore(C, D)}
+\tcc{Input: 
+  C, D:  Array of transactions of clients and days
+\quad Output:M:  Table of transactions of client i on day j
+}
+\tcc{Compute total transactions of C and D}
+total\_C $\gets$ sum(C)\;
+total\_D $\gets$ sum(D)\;
+
+\If{total\_C $\neq$ total\_D}{
+  print "There doesn’t exist such a database"\;
+  \Return\;
+}
+
+G $\gets$ Graph(V, E, s, t)\tcc{Initialize a network flow graph with empty vertices, edges, source node s, and sink node t}
+
+\tcc{Creating nodes of clients and days and capacity edges of transaction}
+\For{$i = 0\ldots n$}{
+  V.addNode($c_i$)\;
+  E.addEdge(s, $c_i$, C[i])\;
+}
+
+\For{$j = 0\ldots m$}{
+  V.addNode($d_j$)\;
+  E.addEdge($d_j$, t, D[j])\;
+}
+
+\For{$i = 0\ldots n$}{
+  \For{$j = 0\ldots m$}{
+    E.addEdge($c_i$, $d_j$, infinity)\;
+  }
+}
+
+
+f $\gets$ FordFulkerson(G)\tcc{Get maxflow f using Ford Fulkerson with input G }
+
+\If{value(f) $\neq$ total\_C}{
+  print "There doesn’t exist such a database"\;
+  \Return\;
+}
+
+\tcc{Create table M of each transaction amount of client i on day j}
+M = List[n][m]\;
+
+\For{$j = 0\ldots m$}{
+  \For{$i = 0\ldots n$}{
+    M[i][j] = f($c_i$, $d_j$)\tcc{Flow of edge from $c_i$ to $d_j$}
+  }
+}
+
+\Return M\;
+
+\end{algorithm}
+% Algorithm Description
+\noindent\textbf{Algorithm Description} \\
+\\
+\indent This algorithm models the problem as a network flow graph. The graph consists of two sets of nodes: clients $c_i$ and days $d_j$. The source node $s$ is connected to each client $c_i$ with an edge of capacity $C[i]$, and each day $d_j$ is connected to the sink node $t$ with an edge of capacity $D[j]$.
+The edges between clients and days have infinite capacity to allow the flow of transactions.\\
+\indent Then the algorithm runs Ford-Fulkerson to find the max flow of the graph. If the total transaction amount of clients is not equal to the total transaction amount of days, then the database cannot be restored. 
+Otherwise, the algorithm creates a table $M[i][j]$ to store the transaction amount of each client i on each day j.\\
+% Correctness Proof
+\\
+\textbf{Correctness Proof} \\
+\\
+\indent The edge$(s,c_i)$ has capacity $C[i]$ and edge$(c_i,d_j)$ has capacity $\infty$, and edge$(d_j,t)$ has capacity $D[j]$. Thus, the maximum flow value of the graph would be no more than $\sum_{i=0}^{n-1} C[i] = \sum_{j=0}^{m-1} D[j]$.\\
+\indent If the maximum flow value is $\sum_{i=0}^{n-1} C[i] = \sum_{j=0}^{m-1} D[j]$, then it means that $f(s,c_i) = \sum_{j}^{m-1} f(c_i,d_j) = C[i]$ and also $f(d_j,t) = \sum_{i}^{n-1} f(c_i,d_j) = D[j]$ due to flow conservation.\\
+\indent Hence the output $M[i][j]=f(c_i, d_j)$ contains the transaction amount of client $i$ on day $j$. \\
+\indent Otherwise, if the maximum flow value is less than $\sum_{i=0}^{n-1} C[i] = \sum_{j=0}^{m-1} D[j]$, then the flow value from s is not $\sum_{i=0}^{n-1} C[i]$, thus the database cannot be restored.\\
+\indent In conclusion, the algorithm is correct and outputs the correct transaction amount of client $i$ on day $j$ or returns that there doesn't exist such a database.\\
+% Time Complexity
+\\
+\textbf{Time Complexity}
+Use the Edmonds-Karp algorithm to find the maximum flow in the residual graph. The time complexity of the Edmonds-Karp algorithm is $O(|V|\cdot|E|^2)$. In this case, the number of vertices $|V|=n+m+2$ and the number of edges $|E|=n\cdot m+n+m$. Thus, the time complexity of the algorithm is $O((n+m+2)\cdot(n\cdot m+n+m)^2)$, simplified as $O((n+m)^3)$.\\
+\\
+% Space Complexity
+\textbf{Space Complexity}
+The space complexity of the algorithm is $O(|V|+|E|+nm)=O(2(n+m)+2+n\cdot m+n\cdot m)=O(nm)$ for storing the table and flow network graph $M$.
+
+
+\begin{problem}
+    \textbf{Decreased flow} 
+\end{problem}
+% Problem 2.1
+\textbf{2.1}\\ 
+\indent Construct a residual graph based on $G$ given the flow $f$. 
+For each edge$(u,v)$, the value is $c(u,v)-f(u,v)$ and add backward edge$(v,u)$ with value $f(u,v)$.
+Then run BFS from $s$ to $t$ in the residual graph. $f$ is a maximum flow only if there exists no path.
+Time complexity should be $O(|V| + |E|)$.\\
+% Problem 2.2
+\textbf{2.2} \\
+\indent The value of maximum flow can be $value(f)$ or $value(f)-1$ in the decreased graph.\\
+$value(f')=value(f)$ if $f(x,y) < c(x,y)$ or there exists other augmenting paths.
+$value(f')=value(f) - 1$ if $c(x,y) = f(x,y)$ and there exists no other paths.\\
+\indent To be more specific,\\
+\indent If $f(x,y)<c(x,y)$, then the edge$(x,y)$ is not saturated and the max flow remains the same. \\
+\indent If $f(x,y)=c(x,y)$, then the edge$(x,y)$ is saturated and there exists two cases:
+\begin{itemize}[label=-]
+  \item If there exists an augmenting path, then the max flow remains the same.
+  \item If there exists no augmenting path, then the max flow decreases by 1.
+\end{itemize}
+
+% Problem 2.3
+\noindent\textbf{2.3}
+\begin{algorithm}
+\caption{decreasedFlow(G, f, (x, y))}
+%  Algo2 Input
+\tcc{Input: 
+\begin{itemize}[label=-]
+  \item $G(V,E,s,t)$:  original network flow graph
+  \item $f$:  original max flow
+  \item $(x,y)$:  edge to be decreased
+\end{itemize} 
+% Algo2 Output
+\quad Output: 
+\begin{itemize}[label=-]
+  \item $f'$:  max flow after decreasing edge$(x,y)$ capcity
+\end{itemize} 
+}
+% Algo2
+\tcc{Create a residual graph based on $G$ with respect to $f$}
+residual\_G $\gets$ ResidualGraph(G, f)\;
+\tcc{If edge$(x,y)$ is not saturated, then return the original max flow}
+\If{$f(x,y) < c(x,y)$}{
+  \Return f\;
+}
+residual\_G', f' $\gets$ reducePathFlowValue(residual\_G,(x,y),1)\tcc{ Decrease flow value of path passing through edge$(x,y)$ by 1}
+residual\_G' $\gets$ reduceCapacity(residual\_G', (x,y), 1) \tcc {Decrease capacity$(x,y)$ by 1}
+
+P = BFS(residual\_G', s, t)\tcc{Find augmenting path in the residual graph}
+\If{P is not empty}{
+  f' $\gets$ Augment(f', P)\;
+  update residual\_G'\;
+}
+\Return f'
+
+\end{algorithm}
+
+% Algorithm Description
+\noindent\textbf{Algorithm Description} \\
+\\
+\indent The goal of the algorithm is after decreasing the capacity value of the edge $(x,y)$ by 1 given $G(V,E,s,t,c)$ and f, to check if the max flow value changes and return the new max flow $f'$.\\
+\indent The core concept is to check whether or not the edge $(x,y)$ is saturated. If not saturated, then the max flow remains the same after decreasing the capacity. 
+Otherwise, if edge $(x,y)$ is saturated, then the max flow value can either remain the same or decrease by 1.\\
+\indent The algorithm constructs a residual graph based on the original graph and flow. If the edge $(x,y)$ is not saturated, then the original max flow is returned. Otherwise, the algorithm decreases the flow value of the path passing through edge $(x,y)$ by 1 and decreases the capacity of edge $(x,y)$ by 1.\\
+\indent Then try to find an augmenting path in the residual graph using BFS. If it exists, augment and return the flow and it should be the new maximum flow. Else, return the original f as max flow.\\
+
+% Correctness Proof
+\noindent \textbf{Correctness Proof}\\
+\\
+\indent As answered in 2.2, if the edge $(x,y)$ is not saturated then the max flow remains the same after decreasing the capacity because the edge can still carry at least one flow.\\
+\indent If the edge $(x,y)$ is saturated, then the max flow value can either remain the same or decrease by 1. If there exists an augmenting path in the residual graph, then the max flow remains the same. Otherwise, the max flow decreases by 1.\\
+
+% Time Complexity
+\noindent \textbf{Time Complexity}\\
+Total running time: $O(|V|+|E|)$\\
+$1$  \indent $O(|E|)$ construction of $residual_G$\\
+$2,3$ \indent $O(1)$ check if edge $(x,y)$ is saturated\\
+$4$  \indent $O(|V|+|E|)$ reduce flow value of path through $(x,y)$\\
+$5$  \indent $O(1)$ reduce capacity of edge $(x,y)$\\
+$6$  \indent $O(|V|+|E|)$ BFS to find augmenting path\\
+$7$  \indent $O(|V|)$ augment flow and update residual graph\\
+
+% Space Complexity
+\noindent \textbf{Space Complexity}\\
+The space complexity of the algorithm is $O(|V|+|E|)$ for storing flow network graph.
+
+
+\end{document}

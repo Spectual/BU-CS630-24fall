@@ -1,0 +1,220 @@
+\documentclass[11pt]{exam}
+\title{\Large{\textbf{CS 630, Fall 2024, Homework 8}}}
+\author{\textbf{Yifei Bao}}
+\date{\textbf{December 7, 2024}}
+
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{amsmath,amsfonts,latexsym,amssymb}
+\usepackage{enumerate}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{etoolbox}
+\usepackage{tipa}
+\usepackage{caption}
+\usepackage[boxruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{enumitem}
+
+\pdfpagewidth 8.5in
+\pdfpageheight 11in 
+
+\oddsidemargin 0in
+\evensidemargin 0in
+
+\newtheorem{problem}{Problem}
+
+\let\oldtcc\tcc
+\renewcommand{\tcc}[1]{{\color{olive}\oldtcc{#1}}}
+
+\begin{document}
+\maketitle
+
+
+% Problem 1
+\begin{problem}
+    \textbf{Graph centrality}
+\end{problem}
+
+\noindent\textbf{1.}
+
+\begin{algorithm}[H]
+    \caption{$ComputeDistance(G(V,E))$}
+
+    \For {$s \in V$}{
+        \tcc{Initialize the count of shortest paths from $s$ to every vertex}
+        \For {$v \in V$}{
+            $\sigma_s[v] \gets 0$\;
+        }
+        $\sigma_s[s] \gets 1$\;
+        
+        \tcc{Initialize distances and a queue for BFS}
+        $dist[s] \gets 0$\;
+        \For {$v \in V, v \neq s$}{
+            $dist[v] \gets \infty$\;
+        }
+        
+        $Q \gets$ a new empty queue\;
+        $Q.\text{enqueue}(s)$\;
+
+        \While{$Q$ is not empty}{
+            $u \gets Q.\text{dequeue}()$\;
+            
+            \For {$w \in \text{Adj}[u]$}{
+                \uIf{$dist[w] = \infty$}{
+                    $dist[w] \gets dist[u] + 1$\;
+                    $Q.\text{enqueue}(w)$\;
+                    $\sigma_s[w] \gets \sigma_s[u]$ \tcc{First time reaching $w$, inherit count from $u$}
+                }
+                \ElseIf{$dist[w] = dist[u] + 1$}{
+                    $\sigma_s[w] \gets \sigma_s[w] + \sigma_s[u]$ \tcc{Another shortest path found}
+                }
+            }
+        }
+        
+        \For {$v \in V$}{
+            $P[s,v] \gets \sigma_s[v]$\;
+        }
+    }
+
+    \Return{$P, dist$}\;
+\end{algorithm}
+
+\noindent\textit{Time complexity.}
+For a single source $s$, the time complexity is $O(|V| + |E|)$, because we perform a BFS traversal of the graph $G(V,E)$ starting from $s$. Since we have $|V|$ sources, the total time complexity is $O(|V|^2 + |V||E|)$.
+
+\noindent\textit{Correctness.}
+BFS ensures that the level structure represents the shortest path distances
+By counting all valid paths to the next level during BFS, we accurately compute the number of shortest paths  $p(s, v)$ .
+
+\noindent\textbf{2.}
+Since  $path$  is a shortest path from  $s$  to  $t$  with total length  $k$ , if  $path$ {$s \to v$}  is not the shortest path from  $s$  to  $v$ , we could replace it with a shorter path, forming a path from  $s$  to  $t$  shorter than  \text{path} . This contradicts the assumption that  $path$  is the shortest path.
+
+\noindent\textbf{3.}
+
+
+\begin{algorithm}[H]
+    \caption{$ComputeBetweenness(G(V,E))$}
+    $P, dist \gets ComputeDistance(s, G)$\;
+
+    \For{$v \in V$}{
+        $B[v] \gets 0$\;
+    }
+
+    \tcc{Use dist and P to compute B[v]}
+    \For{$v \in V$}{
+        \For{$s \in V$}{
+            \For{$t \in V, t \neq s$}{
+                \If{$dist[s,t] = dist[s,v] + dist[v,t]$}{
+                    $B[v] \gets B[v] + \frac{P[s,v] \cdot P[v,t]}{P[s,t]}$\;
+                }
+            }
+        }
+    }
+
+    \Return{$B$}\;
+
+\end{algorithm}
+
+\noindent\textit{Time complexity.}
+The time complexity is $O(|V|^3)$.
+
+\noindent\textit{Correctness.}
+Based on the proof of 2, we know that If a vertex $v$ is on path then path $s-v$ and path $v-t$ are shortest path between the respective vertices. So we only need to check if $dist(s,t) = dist(s,v) + dist(v,t)$ to determine if $v$ is on the shortest path between $s$ and $t$.
+
+
+% Problem 2
+
+\newpage
+\begin{problem}
+    \textbf{Centrality using an adjacency matrix}
+\end{problem}
+
+\noindent\textbf{1.}
+The basic idea is to use the adjacency matrix to compute the number of shortest paths of length $p$ between every pair of vertices. We can use the matrix multiplication to compute the number of paths of length $p$ between every pair of vertices. We can then use the matrix to update the shortest path distances and the number of shortest paths between every pair of vertices.\\
+
+
+\noindent\textit{Time complexity.}
+The time complexity is $O(kn^3)$.\\
+
+
+\noindent\textit{Correctness.}
+The definition of the power of a matrix $A^p$ is that the $(i,j)$ entry of $A^p$ is the number of paths of length $p$ from vertex $i$ to vertex $j$. We can use the matrix $A^p$ to update the shortest path distances and the number of shortest paths between every pair of vertices. When $p = 1$, the matrix $A$ is the adjacency matrix of the graph, and the $(i,j)$ entry of $A$ is 1 if there is an edge between vertex $i$ and vertex $j$. When increasing $p$, if we did not find a shorter path, we can update the number of shortest paths between every pair of vertices. If it already exists a same length path, we can add the number of paths.
+
+\begin{algorithm}[H]
+    \caption{$ComputeShortestPathsByMatrix(A,n,k)$}
+    Initialize $dist[n][n], P[n][n]$\;
+    \For {$i = 1 \ldots n$}{
+        \For {$j = 1 \ldots n$}{
+            \If {i == j}{
+                $dist[i][j] \gets 0$\;
+                $P[i][j] \gets 1$\;
+            }
+            \ElseIf {A[i][j] == 1}{
+                $dist[i][j] \gets 1$\;
+                $P[i][j] \gets 1$\;
+            }
+            \Else{
+                $dist[i][j] \gets \infty$\;
+                $P[i][j] \gets 0$\;
+            }
+        }
+    }
+
+    \For {$p = 2 \ldots k$}{
+        \For {$i = 1 \ldots n$}{
+            $B \gets A^p$\tcc{Compute the matrix to get the number of paths of length $p$}
+            \For {$i = 1 \ldots n$}{
+                \For {$j = 1 \ldots n$}{
+                    \If {$B[i][j] \neq 0$}{
+                        \If {$dist[i][j] > p$}{
+                            $dist[i][j] \gets p$\;
+                            $P[i][j] \gets B[i][j]$\;
+                        }
+                        \ElseIf {$dist[i][j] == p$}{
+                            $P[i][j] \gets P[i][j] + B[i][j]$\;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    \Return{$dist, P$}\;
+
+\end{algorithm}
+
+
+\noindent\textbf{2.}
+
+\begin{algorithm}[H]
+    \caption{$ComputeBetweenessByMatrix(A,n,k)$}
+    $dist, count \gets ComputeShortestPathsByMatrix(A,n,k)$\;
+
+    \For{$v \in V$}{
+        $B[v] \gets 0$\;
+    }
+
+    \For{$v = 1 \ldots n$}{
+        \For{$s = 1 \ldots n$}{
+            \For{$t = 1 \ldots n$}{
+                \If{$s != t$}{
+                    \tcc{Check if $v$ is on the shortest path between $s$ and $t$}  
+                    \If{$dist[s][t] == dist[s][v] + dist[v][t]$}{
+                        $B[v] \gets B[v] + \frac{P[s,v] \cdot P[v,t]}{P[s,t]}$\;
+                    }
+                }
+            }
+        }
+    }
+
+    \Return{$B$}\;
+
+\end{algorithm}
+
+\noindent\textit{Time complexity.}
+The time complexity is $O(n^3)$.
+
+\noindent\textit{Correctness.}
+Due to the correctness of the previous algorithm, we can get correct $dist$ and $P$ matrices. We can then use the matrices to compute the betweenness centrality of every vertex. We can use the matrices to check if a vertex $v$ is on the shortest path between $s$ and $t$, and the method is proved in problem 1.
+
+\end{document}

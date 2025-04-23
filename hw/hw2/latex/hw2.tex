@@ -1,0 +1,137 @@
+\documentclass[11pt]{exam}
+\title{\Large{\textbf{CS 630, Fall 2024, Homework 2}}}
+\author{\textbf{Yifei Bao}}
+\date{\textbf{September 23, 2024}}
+
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{amsmath,amsfonts,latexsym,amssymb}
+\usepackage{enumerate}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{etoolbox}
+\usepackage{tipa}
+\usepackage{caption}
+\usepackage[boxruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{enumitem}
+
+\pdfpagewidth 8.5in
+\pdfpageheight 11in 
+
+\oddsidemargin 0in
+\evensidemargin 0in
+
+\newtheorem{problem}{Problem}
+
+\let\oldtcc\tcc
+\renewcommand{\tcc}[1]{{\color{olive}\oldtcc{#1}}}
+
+\begin{document}
+\maketitle
+
+% Problem 1
+\begin{problem}
+    \textbf{Price contest with a blackbox algorithm} 
+\end{problem} 
+
+% Algorithm 1
+\begin{algorithm}[H]
+\caption{PriceContest$([a_1,a_2,...,a_n], B)$}
+$V \gets [\ ]$\tcc{Initialize an empty list of selected objects}
+$T \gets B$\tcc{Initialize the remaining budget with the initial budget}
+
+\For{$i = 1\ldots n$}{
+    \If{$a_i \leq T$ AND $CanSolve([a_i,...,a_n],T)$}{
+        V.append($a_i$)\;
+        $T \gets T - a_i$\;
+        \If{$T == 0$}{
+            \Return $V$\;
+        }
+    }
+}
+\Return \texttt{"not possible"}\;
+
+\end{algorithm}
+\vspace{2em}
+% Algorithm Description
+\noindent\textbf{Algorithm Description} \\
+\\
+\indent The algorithm takes a list of objects $[a_1,a_2,...,a_n]$ and a budget $B$ as input. The output is a list of objects, total value of which is exactly $B$.\\
+\indent The algorithm uses empty list $V$ to store the selected objects and $T$ to store the remaining budget from $B$.\\
+\indent For each object $a_i$, if the object's value is no more than the remaining budget and the blackbox function CanSolve finds that there exists 
+a subset of remaining objects, the sum of which equals to remaining budget, then the object is selected and added to V. The object's value is subtracted from the remaining budget.\\
+\indent The algorithm returns the selected objects if there is exactly no remaining budget. Otherwise, it returns "not possible".\\
+
+% Correctness Proof
+\noindent\textbf{Correctness Proof} \\
+\indent In each step, the algorithm uses the blackbox function CanSolve to check if there exists a subset of remaining objects that sums to the remaining budget. If the function returns true, the object is selected and the remaining budget is updated. CanSolve ensures that the selected objects can sum to the remaining budget, so after iterating through all objects, the selected objects will sum to the initial budget $B$. Thus the algorithm is correct.\\
+
+% Time Complexity
+\noindent\textbf{Time Complexity} \\
+In the worst case, the algorithm will iterate through all $n$ objects. For each object, it will call the blackbox function CanSolve, which takes $O(C)$ time. So the total running time is $O(nC)$.\\
+\\
+% Space Complexity
+\noindent\textbf{Space Complexity} \\
+The space complexity is $O(n)$ for storing the list of selected objects.\\
+
+% Problem 2
+\begin{problem}
+    \textbf{Vaccine testing}
+\end{problem}
+
+% Algorithm 2
+\begin{algorithm}[H]
+\caption{VaccineTesting$(D, T)$}
+$n \gets len(D)$\;
+$P \gets [p_0, p_2, ..., p_{n-1}]$ \tcc{Initialize the person list, each p is a person}
+$S \gets [\ ]$ \tcc{Initialize the list of subsets}
+\For{$i = 0 \ldots n-1$}{
+    $S_i \gets [\ ]$\;
+    \For{$j = 0 \ldots n-1$}{
+        \If{$D[i][j] \leq T$}{
+            $S_i.append(p_j)$\tcc{For each person $p_i$, add all persons within distance $T$ to $S_i$ as representative}
+        }
+    }
+    $S.append(S_i)$\tcc{Add the representative set of person $p_i$ to $S$}
+}
+$minSetCover$ $\gets$ SCSolver($P,S$)\tcc{Get minimum set cover of P}
+$representativeSet$ $\gets$ GetPerson($minSetCover$)\tcc{Get persons of corresponding sets, i.e. for sets $S_1,S_3$, get $p_1,p_3$}
+\Return $representativeSet$\;
+\end{algorithm}
+
+\vspace{2em}
+% Algorithm Description
+\noindent\textbf{Algorithm Description} \\
+\\
+\indent The algorithm takes distance matrix $D$ and max distance value $T$ as input.\\
+\indent The purpose of the algorithm is to select a minimum set of individuals such that
+every person in the population is within distance $T$ of at least one person in the set.\\
+\indent In this algorithm, for each person $p_i$, we find all persons within distance $T$ to $p_i$ and add them to set $S_i$.
+It basically means that $p_i$ can represent all persons in $S_i$ because they are within distance $T$ to $p_i$.\\
+\indent Then we get the minimum set cover of $P$ in $S$ using the blackbox function SCSolver.
+And it means that the minimum set of persons in $P$ can cover all persons in the population.\\
+\indent Finally we get the persons of representing each set in the minimum set cover and return them as the representative set.\\
+
+\newpage
+% Correctness Proof
+\noindent\textbf{Correctness Proof} \\
+\begin{enumerate}
+    \item Every person in the population is represented. Constructing $S_i$ of each person $p_i$ ensures that every person is included in at least one set in $S$. The SCSolver ensures that the minimum cover sets of $P$ covers all persons in the population. Thus every person is represented by at least one of the selected set.
+    \item The number of trial individuals is minimized. The SCSolver ensures that the minimal number of persons in $P$ is selected to cover all persons in the population.
+\end{enumerate}
+% Time Complexity
+\noindent\textbf{Time Complexity} \\
+Total running time: $O(n^2+C)$\\
+$1,2,3$ \indent $O(n)$ initializing $n$,$P$,$S$\\
+$5$ \indent $O(n)$ initializing $S_i$ for each person\\
+$7,8$ \indent $O(n^2)$ checking distance for each pair of persons and adding to $S_i$\\
+$9$ \indent $O(n)$ adding $S_i$ to $S$\\
+$10$ \indent $O(C)$ calling SCSolver\\
+$11$ \indent $O(n)$ getting persons of corresponding sets\\
+
+% Space Complexity
+\noindent\textbf{Space Complexity} \\
+The space complexity of the algorithm is $O(n^2)$ for storing the sets S and $O(n)$ for storing the person list $P$.
+The total space complexity is $O(n^2+n)=O(n^2)$.
+\end{document}

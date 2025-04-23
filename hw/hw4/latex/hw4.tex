@@ -1,0 +1,152 @@
+\documentclass[11pt]{exam}
+\title{\Large{\textbf{CS 630, Fall 2024, Homework 4}}}
+\author{\textbf{Yifei Bao}}
+\date{\textbf{October 28, 2024}}
+
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{amsmath,amsfonts,latexsym,amssymb}
+\usepackage{enumerate}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{etoolbox}
+\usepackage{tipa}
+\usepackage{caption}
+\usepackage[boxruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{enumitem}
+
+\pdfpagewidth 8.5in
+\pdfpageheight 11in 
+
+\oddsidemargin 0in
+\evensidemargin 0in
+
+\newtheorem{problem}{Problem}
+
+\let\oldtcc\tcc
+\renewcommand{\tcc}[1]{{\color{olive}\oldtcc{#1}}}
+
+\begin{document}
+\maketitle
+
+% Problem 1
+\begin{problem}
+    \textbf{Clique Polling} 
+\end{problem} 
+
+\noindent\textbf{(a)}
+Since each edge is independently present withprobability $p$, the probability of a specific triangle being present is $p^3$.\\
+\noindent\textbf{(b)}
+The number of possible triangles in a graph with $n$ vertices is $\binom{n}{3}$. Since the probability of a specific triangle being present is $p^3$, the expected number of triangles in the graph is $\binom{n}{3}p^3=\frac{n(n-1)(n-2)}{6}p^3$.\\
+\noindent\textbf{(c)}
+The expected number of k-cliques in the graph is $\binom{n}{k}p^{\binom{k}{2}}=\frac{n!}{k!(n-k)!}p^{\frac{k(k-1)}{2}}$.\\
+
+% Problem 2
+\begin{problem}
+    \textbf{Site Splitting} 
+\end{problem} 
+
+% Algorithm Description
+\noindent\textit{Algorithm.}
+This problem is reduced to a global minimum cut problem by constructing an undirected weighted graph, where each team is represented as a node, and an edge is added between any two teams that have meetings together. The weight of each edge corresponds to the number of meetings between those two teams. Using a global min cut algorithm in this graph, we can divide the teams into two groups representing the two buildings that minimizes the total weight of edges crossing between the two parts. Minimizing this cut reduces the number of meetings crossing buildings.\\
+
+
+% Corrrectness
+\noindent\textit{Correctness.}
+Each edge weight represents the number of meetings between teams, so minimizing the sum of weights crossing the cut ensures the fewest possible meetings occur between the two buildings, which is the goal of the problem.
+\\
+
+% Space complexity
+\noindent\textit{Space complexity.}
+The space complexity is $O(km+kn+mn)$, where $k$ is the number of teams, $m$ is the number of meetings, and $n$ is the number of participants.\\
+
+% Time complexity
+\noindent\textit{Time complexity.}
+The time complexity is $O(km+kn+mn)$.\\
+
+
+% Algorithm 1
+\begin{algorithm}[H]
+\caption{AssignTeams$(T, M)$}
+    \tcc{Input:\\ 
+    T: list of teams containing list of participants\\
+    M: list of meetings\\
+    Output:\\
+    B: map assigning each team to building 1 or 2}
+    $G \gets$ empty graph\;
+    \For{$t$ in $T$}{
+        $G.add\_node(t)$\tcc{Add each team as a node in G}
+    }
+    W $\gets$ \{\}\tcc{create an empty dictionary to store edge weights}
+    \For{$m \in M$}{
+        $P \gets m.participants$\tcc{Get the list of participants in the        meeting}
+        $t\_set \gets 0$\tcc{Initialize the team set in the meeting}
+        \For{$p$ in $P$}{
+            $t\_set.add(p.team)$\tcc{Add the team of the participant to the team set}
+        }
+        \If{$|t\_set| == 2$}{
+            $t_1, t_2 \gets t\_set$\tcc{Get the two teams in the meeting}
+            \If{$(t_1, t_2)$ not in W}{
+                $W[(t_1, t_2)] \gets 0$\tcc{Initialize the edge weight between t1 and t2}
+            }
+            $W[(t1, t2)] \gets W[(t1, t2)] + 1$\tcc{Increment the edge weight}
+        }
+    }
+    \For{$(t_1, t_2),w$ in $W$}{
+        $G.addEdge(t_1, t_2, w)$\tcc{Add an edge between teams with weight}
+    }
+    $min\_cut \gets GlobalMinCut(G)$\tcc{Find the global min cut in the graph}
+    $B \gets \{\}$\tcc{Create an empty dictionary to store the building assignment}
+    \For{$t$ in $T$}{
+        \If{$t \in min\_cut[0]$}{
+            $B[t] \gets 1$\tcc{Assign team t to building 1}
+        }
+        \Else{
+            $B[t] \gets 2$\tcc{Assign team t to building 2}
+        }
+    }
+    \Return $B$
+\end{algorithm}
+
+\vspace{2em}
+
+% Problem 3
+\begin{problem}
+    \textbf{Content Resolution with Prioritization}
+\end{problem}
+
+\noindent\textbf{(a)}
+Probability of high priority succeeding at time $t$ with $p=\frac{1}{n}$: \\
+
+$P(S[i,t])=\frac{1}{n}(1-\frac{1}{n})^{\frac{n}{10}-1}(1-\frac{1}{2n})^{\frac{9n}{10}}=\frac{1}{n-1}((1-\frac{1}{n})^{n})^{\frac{1}{10}}((1-\frac{1}{2n})^{2n})^{\frac{9}{20}}$\\
+
+Because $\lim_{n \to \infty} \left(1 - \frac{1}{n}\right)^n = \frac{1}{e}$\\
+
+$P(S[i,t])\geq\frac{1}{n-1}(\frac{1}{e})^{\frac{11}{20}}$
+
+The event that $P_i$ doesn’t succeed after $t$ rounds:$F([i, t]) = \prod_{r=1}^{t} \overline{P(S[i, t])} \leq (1-\frac{1}{e^{\frac{11}{20}}(n-1)})^t$\\
+
+after $t=\lceil e^{\frac{11}{20}}(n-1) \rceil$, we get $P(F([i, t])) \leq \frac{1}{e}$\\
+
+After $t=\lceil e^{\frac{11}{20}}(n-1) \rceil c\ln n$ rounds, we get $n^{-c}$\\
+
+By the union bound, the probability that any high priority content does not succeed after $t$ rounds is at most $n^{-c+1}$\\
+
+If we select $t=\lceil e^{\frac{11}{20}}(n-1) \rceil 2\ln n$, then this result implies we succeed with prob at least $1-\frac{1}{n}$\\
+\noindent\textbf{(b)}
+
+Probability of high priority succeeding at time $t$ with $p=\frac{1}{n}$: \\
+
+$P(S[i,t])=\frac{c}{n}(1-\frac{c}{n})^{\frac{n}{10}-1}(1-\frac{c}{2n})^{\frac{9n}{10}}=\frac{c}{n-c}((1-\frac{c}{n})^{\frac{n}{c}})^{\frac{c}{10}}((1-\frac{c}{2n})^{\frac{2n}{c}})^{\frac{9c}{20}}$\\
+
+Because $\lim_{n \to \infty} \left(1 - \frac{1}{n}\right)^n = \frac{1}{e}$\\
+
+$f=\lim_{n \to \infty} P(S[i,t])=\frac{c}{n-c}(\frac{1}{e})^{\frac{11c}{20}}$\\
+
+$f^{'}=\frac{c + (c - n) \frac{11c - 20}{20}}{(c - n)^2} e^{-\frac{11c}{20}}=0$\\
+
+$c = \frac{20}{11}$\\
+\noindent\textbf{(c)}
+When a process in a particular priority class succeeds at any given time step with probability $p$ , the waiting time until success follows a geometric distribution. Hence the average number of time steps to get success is $\frac{1}{p}$.\\ 
+\end{document}

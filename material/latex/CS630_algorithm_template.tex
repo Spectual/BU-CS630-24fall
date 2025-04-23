@@ -1,0 +1,333 @@
+\documentclass[11pt]{exam}
+
+\usepackage{fullpage}
+\usepackage{xcolor}
+%\definecolor{oxblue}{RGB}{0, 33, 71}
+
+\usepackage{amsmath,amsfonts,latexsym,amssymb}
+\usepackage{enumerate}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{etoolbox}
+\usepackage{tipa}
+\usepackage{caption}
+
+\usepackage[boxruled,vlined,linesnumbered]{algorithm2e}
+\newcommand{\answerbox}[1]{\fbox{\textcolor{white}{\rule{#1}{24pt}}}}
+\newcommand{\answerboxshort}[2][]{\vspace*{.5pt}\fbox{\begin{minipage}[c][14pt]{#2}\hfil#1\hfil \end{minipage}}\vspace*{.5pt}}%\textcolor{white}{\rule{#1}{8pt}}
+\newcommand{\answerboxtall}[2]{\fbox{\textcolor{white}{\rule{#1}{#2}}}}
+
+
+\usepackage[boxruled,vlined,linesnumbered]{algorithm2e}
+\usepackage[noend]{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+
+\oddsidemargin 0in
+\evensidemargin 0in
+
+\newtheorem{claim}{Claim}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{observation}{Observation}
+\newtheorem{question}{Question}
+\newtheorem{problem}{Problem}
+
+\newenvironment{proof}{\smallskip \noindent \emph{Proof:}} {\hfill $\Box$}
+
+\newcommand{\re}{{\mathbb{R}}}
+\newcommand{\floor}[1]{\lfloor {#1} \rfloor}
+\newcommand{\ceil}[1]{\lceil {#1} \rceil}
+\newcommand{\paren}[1]{\left( {#1} \right)}
+\newcounter{probnumcount}
+\setcounter{probnumcount}{1}
+\newcommand{\probnum}{\arabic{probnumcount}. \addtocounter{probnumcount}{1}}
+\let\oldtcc\tcc
+\renewcommand{\tcc}[1]{{\color{olive}\oldtcc{#1}}}
+
+
+\newcommand{\opt}{\mathit{OPT}}
+
+
+
+\begin{document}
+
+\begin{center}
+{\large Pseudocode examples}
+\end{center}
+
+
+   \subsection*{BFS}
+ 
+ \textbf{Queue implementation:}\\
+ 
+  \begin{algorithm}[H]
+      \caption{BFS(G,s)} 
+      
+\tcc{$G$ is hash table,  the adjacency list of a graph}
+\tcc{ $s$ is a source vertex in $G$}
+
+$parents \gets \{ \}$\tcc{empty hash table, parents[v] = v's parent.} 
+$dist \gets \{ \}$\tcc{empty hash table, dist[v] = distance from s.}
+$Q \gets$ empty FIFO queue\tcc{keep track of active nodes}
+
+$Q.enqueue(s)$, $parents[s] = None$, $dist[s] = 0$ \tcc{initialization}
+
+\While{Q is not empty}{
+$u \gets Q.dequeue()$\;
+\For{$v$ in $G[u]$}{\tcc{explore neighbors of active node u}
+
+\If{$v$ not in $parents$}{\tcc{v was so far undiscovered}
+$parents[v] = u$\;
+$dist[v] = dist[u]+1$\;
+Q.enqueue(v)\;
+}
+}
+}
+\Return{$parents$, $dist$}
+      \end{algorithm}
+      
+     \vspace{.5in}
+     
+     \textbf{Layers implementation:}\\ 
+      
+        \begin{algorithm}[H]
+      \caption{BFS(G,s)} 
+\tcc{$G$ is hash table,  the adjacency list of a graph}
+\tcc{ $s$ is a source vertex in $G$}
+
+$parents \gets $ hash table \tcc{ parents[v] = v's parent in BFS tree.} 
+$layers \gets$ hash table \tcc{layers[i] = nodes in layer i}
+$dist \gets$ hash table\tcc{empty hash table, dist[v] = distance from s.}
+
+$layers[0] \gets s$, $parents[s] = None$, $dist[s] = 0$, $i\gets 0$ \tcc{initialization}
+
+\While{$layers[i]$ is not empty}{
+$layers[i+1] \gets [\ ]$\;
+\For{$u$ in $layers[i]$}{
+\For{$v$ in $G[u]$}{\tcc{explore neighbors of active node u}
+
+\If{$v$ not in $parents$}{\tcc{v was so far undiscovered}
+$parents[v] = u$\;
+$dist[v] = dist[u]+1$\;
+$layers[i+1].add(v) $\tcc{v is at layer i+1}
+}
+}
+}
+}
+$i \gets i+1$\;
+\Return{$parents$, $dist$, $layers$ (optional)}
+      \end{algorithm}
+
+ 
+  \begin{algorithm}[H]
+      \caption{bipartiteBFS(G)} 
+\tcc{$G$ is hash table,  the adjacency list of a graph}
+$s \gets$ choose a vertex at random from V\tcc{serves as the source}
+
+$parents, dist = BFS(G,s)$\;
+$C1, C2 \gets [\ ]$\tcc{empty lists, contains the vertices of the two classes in the bipartition}
+\For{$v$  in $dist$}{\tcc{assign nodes to C1, C2 based on odd/even layers}
+\If{$dist[v] == $ odd}{
+$C1.add(v)$\;
+}
+\Else{
+$C2.add(v)$\;
+}
+}
+\Return{$C1$, $C2$}
+      \end{algorithm}
+
+\subsection*{DFS}
+
+\begin{algorithm}[H]
+      \caption{DFSWrapper($G, s$)} 
+\tcc{$G$ adjacency list as nested hash table, $s$ source node}
+
+
+$parents \gets $ empty hash table\tcc{parents of nodes in the DFS tree (forest)}
+$times \gets$ empty hash table \tcc{tuples of <discovery time, finish time>}
+$time \gets 0$\tcc{time counter}
+
+$parents[s] \gets None$\;
+DFS($G,s$)\;
+
+
+\Return parents, times
+      \end{algorithm}
+
+
+ \begin{algorithm}[H]
+      \caption{DFS($G$, $u$)} 
+$time \gets time+1$\;
+
+$times[u][0] = time$\;
+
+\For{$v$ in $G[u]$}{
+\tcc{recursively explore $u$'s neighbors}
+\If{$v$ not in $parents$}{
+
+$parents[v] = u$\;
+DFS($G$,$v$)
+}
+}
+$time \gets time+1$\;
+$times[u][1] = time$\;
+ \end{algorithm}
+
+\subsection*{Dijkstra}
+
+\begin{algorithm}[H]
+      \caption{Dijkstra($G$, $s$)  }
+\tcc{$G$ adjacency list fo weighted directed graph. $G[u][v] = l(u,v)$, source $s$}
+$\pi \gets \{\ \}$\tcc{hash table, current best list for v}
+$d \gets \{\ \}$\tcc{hash table, distance of v}
+$parents \gets \{\  \}$\tcc{parents in shortest paths tree}
+$Q \gets $PQ\tcc{priority queue to keep track of min $\pi$}
+$\pi[s] = 0$\;
+$Q.INSERT(<0,s>)$\;
+\For{$v \neq s$ in $G$}{
+$\pi[v] = \infty$\;
+$Q.INSERT(<\pi[v],v>)$\;
+}
+\While{Q is not empty}{
+$<\pi[u],u>\gets$ EXTRACT-MIN(Q)\;
+$d[u] \gets \pi[u]$\;
+\For{$v$ in $G[u]$}{
+\If{$\pi[v]>d[u] + l(u,v)$}{
+DECREASE-KEY($<\pi[v],v>, <d[u] + l(u,v),v>$)\;
+$\pi[v] \gets d[u] + l(u,v)$\;
+$parents[v] \gets u$\;
+}
+}
+}
+
+\Return $d, parents$
+      \end{algorithm}
+
+\subsection*{Prim}
+
+\begin{algorithm}[H]
+      \caption{Prim($G$)  }
+\tcc{$G$ adjacency list of weighted undirected graph $G[u][v] = w(u,v)$}
+
+$parents \gets $ hash table \tcc{parents list in MST, contains  current best edge}
+$wT \gets 0$\tcc{total weight of MST, optional}
+$Tnodes \gets$ empty set \tcc{keep track of nodes fixed in MST}
+
+$Q \gets $empty priority queue\tcc{<weight, v> least edge weight connecting v to MST}
+
+$s \gets$ random node as source\;
+$parents[s] \gets None$, $Q.INSERT(<0,s>)$\;
+\For{$v \neq s$ in $G$}{
+$Q.INSERT(<\infty, v)$\tcc{use $\infty$ for unreachable nodes. Can use really large int instead.}
+$parents[v] \gets None$\; 
+}
+
+\While{Q is not empty}{
+$<weight,u>\gets Q.EXTRACT-MIN(\ )$\tcc{next lightest edge}
+$wT += weight$\;
+$Tnodes.add(u)$\tcc{u us added to the MST and is fixed}
+\For{$v$ in $G[u]$}{
+\If{$v$ not in $Tnodes$ AND $G[v][parents[v]] > G[v][u]$}{
+$Q.DECREASE-KEY(<G[v][parent[v]],v>, <G[v][u],v>)$\;
+$parents[v] = u$\;
+
+}
+}
+}
+
+\Return $parents, wT$
+      \end{algorithm}
+
+
+\subsection*{Divide and Conquer}
+
+\begin{algorithm}[H]
+
+ \caption{MergeSort($A, p, r$)}
+ \tcc{Sorts the subarray A[p:r] in place}
+\If{$p==r$}{
+\Return $A$\;
+}
+$q \gets \lfloor \frac{p+r}{2}\rfloor$\;
+$A[p:q] \gets MergeSort(A, p, q)$\;
+$A[q+1:r] \gets MergeSort(A, q+1, r)$\;
+$A[p:r]\gets Merge(A,p,q,r)$\;
+\Return $A$
+    \end{algorithm}
+    
+    \begin{algorithm}[H]
+
+ \caption{BinarySearch($A, p, r, query$)}
+ \tcc{find the index of query in the subarray A[p:r] }
+
+$q \gets \lfloor \frac{p+r}{2}\rfloor$\;
+$middle \gets A[q]$\;
+\If{$query == middle$}{
+\Return $q$\;
+}\ElseIf{$query < middle$}{
+BinarySearch($A, p, q, query$)\;
+}\Else{
+BinarySearch($A, q+1, r, query$)\;
+}
+\Return $query$ not in $A$
+    \end{algorithm}
+    
+       \begin{algorithm}[H]
+
+ \caption{Karatsuba($a, b, n$)}
+ \tcc{multiply $n$-bit ints $a$ and $b$}
+ \If{$n==1$}{
+ \Return $ab$\;
+ }
+ $m \gets \lfloor \frac{n}{2} \rfloor$\;
+$A_1 \gets \lfloor a/2^m \rfloor$\tcc{high n/2 bits of a and b}
+$B_1 \gets \lfloor b/2^m \rfloor$\tcc{implemented by bit-shift}
+$A_0 \gets a\ mod\ 2^m$\tcc{lower n/2 bits of a and b}
+$B_0 \gets b\ mod\ 2^m$\;
+$x\gets $ Karatsuba($A_1, B_1, m$)\;
+$y\gets $ Karatsuba($A_0, B_0, m$)\;
+$z\gets $ Karatsuba($A_1+A_0, B_1+B_0, m$)\;
+\Return $x^{2m} + (z-x-y)2^m + y$\;
+    \end{algorithm}
+
+
+\subsection*{DP algorithms}
+\begin{algorithm}[H]
+
+ \caption{SubsetSum($w_1, w_2,\ldots, w_n, W$)}
+$M \gets (n+1)\times(W+1)$\tcc{table (matrix/2D array)}
+\For{$w = 0\ldots W$}{\tcc{set border cases}
+$M[0][w] = 0$\;
+}
+\For{$j = 1\ldots n$}{
+\For{$w = 0\ldots W$}{\tcc{Apply recursive formula}
+$M[j][w] = \max \{w_j + M[j-1][w-w_j]; M[j-1][w]  \}$\;
+}
+}
+\Return $M[n][W]$
+    \end{algorithm}
+    
+    \begin{algorithm}[H]
+
+ \caption{SubsetSumSolution($M, w = [w_1, w_2,\ldots, w_n], W$)}
+$S \gets [\ ]$\tcc{set of opt weights}
+\While{$i > 0$ AND $j > 0$}{
+\If{$M[i][j]>M[i-1][j]$}{\tcc{the case where $w_i$ is chosen}
+$S.append(w[i])$\;
+$i \gets i-1$\;
+$j \gets j-w$\;
+}\Else{
+\tcc{$w_i$ is not chosen}
+$i \gets i-1$\;
+}
+}
+\Return $S$
+    \end{algorithm}
+
+\end{document}
